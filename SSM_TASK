@@ -1,2 +1,116 @@
+📘 AWS Project Documentation
+
+Project Name: EC2 with SSM + Nginx Custom Page
+
+1. Services Used
+
+EC2 (Elastic Compute Cloud): Instance launch करणे
+
+IAM (Identity & Access Management): Role तयार करून attach करणे
+
+SSM (AWS Systems Manager): Agent install करून EC2 manage करणे
+
+VPC + Security Group: HTTP (80) inbound traffic allow करणे
+
+2. IAM Role Creation
+
+AWS Console → IAM → Roles → Create Role
+
+Trusted Entity: AWS Service → Select EC2
+
+Permissions Attach:
+
+✅ AmazonSSMManagedInstanceCore (Required)
+
+(Optional) AmazonS3FullAccess
+
+(Optional) AmazonEC2RoleforAWSCodeDeploy
+
+(Optional) AmazonSSMFullAccess
+
+Role Name: EC2-SSM-Role
+
+Click Create Role
+
+3. Attach IAM Role to EC2 Instance
+
+Go to EC2 → Instances
+
+Select your instance → Actions → Security → Modify IAM Role
+
+Select EC2-SSM-Role → Save
+
+4. Launch EC2 Instance
+
+AMI: Ubuntu 20.04/22.04
+
+Instance Type: t2.micro (Free Tier)
+
+Key Pair: Proceed without key pair (SSM वापरणार असल्याने key आवश्यक नाही)
+
+Network:
+
+Public IP → Enable
+
+Security Group → Add Inbound Rule → HTTP (80) → Source: 0.0.0.0/0
+
+IAM Role: Attach → EC2-SSM-Role
+
+5. Install SSM Agent (Ubuntu)
+
+जर agent online नसेल तर manually install करा.
+
+# Update packages
+sudo apt-get update -y
+
+# Install SSM Agent
+sudo snap install amazon-ssm-agent --classic
+
+# Enable service
+sudo systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
+
+# Start service
+sudo systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
+
+# Check status
+systemctl status snap.amazon-ssm-agent.amazon-ssm-agent.service
+
+
+✅ आता तुमचा instance SSM → Managed Instances मध्ये दिसायला हवा.
+
+6. Install Nginx + Custom Page (via SSM Run Command)
+
+Systems Manager → Run Command → Run a command → Document: AWS-RunShellScript
+
+Commands:
+
+# Update packages
+sudo apt-get update -y
+
+# Install Nginx
+sudo apt-get install nginx -y
+
+# Enable Nginx
+sudo systemctl enable nginx
+
+# Start Nginx
+sudo systemctl start nginx
+
+# Remove default Nginx page
+sudo rm -rf /var/www/html/index.nginx-debian.html
+
+# Create custom page
+echo "Welcome to My Custom Nginx Page - SSM + EC2" | sudo tee /var/www/html/index.html
+
+7. Verification
+
+Browser उघडा → http://<EC2-Public-IP>
+
+Output दिसायला हवे:
+
+Welcome to My Custom Nginx Page - SSM + EC2
+
+
+
 # This is the link of SSM_Task
-      https://chatgpt.com/share/68ca424d-82d8-800f-95d8-727b73002bb7
+https://chatgpt.com/share/68ca424d-82d8-800f-95d8-727b73002bb7
