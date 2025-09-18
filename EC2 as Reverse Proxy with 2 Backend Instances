@@ -1,0 +1,177 @@
+# Project Documentation: EC2 as Reverse Proxy with 2 Backend Instances #
+
+Project Objective:
+
+Launch 3 EC2 instances
+
+Reverse Proxy EC2 (NGINX installed)
+
+Backend API EC2 (serves /api)
+
+Backend App EC2 (serves /app)
+
+NGINX reverse proxy routes:
+
+/api → API EC2
+
+/app → App EC2
+
+Step 1: Launch EC2 Instances
+1. Reverse Proxy EC2
+
+OS: Ubuntu 22.04
+
+Security Group (SG) Settings:
+
+Inbound: HTTP (80), SSH (22)
+
+Outbound: All traffic
+
+2. Backend EC2 Instances
+
+API EC2
+
+App EC2
+
+SG Settings:
+
+Inbound: HTTP (80), SSH (22)
+
+Outbound: All traffic
+
+Important: Ensure all EC2s are in public subnet if you want to access via public IP.
+
+Step 2: Backend EC2 Setup
+2.1 Create directory and HTML file
+
+For API EC2:
+
+sudo mkdir -p /var/www/html/api
+sudo nano /var/www/html/api/index.html
+
+
+Paste this content in index.html:
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>जय श्री राम</title>
+</head>
+<body style="text-align:center; margin-top:200px; background-color:#f9f9f9;">
+    <h1 style="font-size:80px; color:orange;">Jay shree krushna</h1>
+</body>
+</html>
+
+
+For App EC2:
+
+sudo mkdir -p /var/www/html/app
+sudo nano /var/www/html/app/index.html
+
+
+Paste similar HTML or different message if you want.
+
+2.2 Install Apache (to serve HTML)
+sudo apt update -y
+sudo apt install apache2 -y
+sudo systemctl enable apache2
+sudo systemctl start apache2
+
+
+Check service:
+
+sudo systemctl status apache2
+
+
+Test in browser:
+
+http://<API_EC2_PUBLIC_IP>/api/
+
+http://<APP_EC2_PUBLIC_IP>/app/
+
+Step 3: Reverse Proxy EC2 Setup (NGINX)
+3.1 Install NGINX
+sudo apt update -y
+sudo apt install nginx -y
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+3.2 Configure NGINX
+
+Edit default site configuration:
+
+sudo nano /etc/nginx/sites-available/default
+
+
+Replace content with:
+
+server {
+    listen 80;
+
+    # API Reverse Proxy
+    location /api/ {
+        proxy_pass http://<API_EC2_PUBLIC_IP>/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # App Reverse Proxy
+    location /app/ {
+        proxy_pass http://<APP_EC2_PUBLIC_IP>/app/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Optional: Root message
+    location / {
+        return 200 'Reverse Proxy Running!';
+    }
+}
+
+
+Important: Replace <API_EC2_PUBLIC_IP> and <APP_EC2_PUBLIC_IP> with actual public IPs of backend EC2s.
+
+3.3 Test NGINX configuration
+sudo nginx -t
+
+
+If successful, reload NGINX:
+
+sudo systemctl reload nginx
+
+Step 4: Security Group / Firewall Check
+
+Reverse Proxy EC2 must allow HTTP (80) from Internet.
+
+Backend EC2s must allow HTTP (80) from Reverse Proxy EC2 only (optional, for security).
+
+Step 5: Test Setup
+
+Open browser and hit:
+
+http://<REVERSE_PROXY_PUBLIC_IP>/api/ → should show API EC2 HTML page
+
+http://<REVERSE_PROXY_PUBLIC_IP>/app/ → should show App EC2 HTML page
+
+If still 404:
+
+Check backend EC2 HTML folder /var/www/html/api/index.html exists
+
+Apache running?
+
+NGINX config correct IP?
+
+Step 6: Summary
+
+Reverse proxy /api → API EC2
+
+
+# link of project is :  https://chatgpt.com/share/68cb9b48-f0c8-800f-9991-55cdb414d5d6
+
+Reverse proxy /app → App EC2
+
+Backend EC2 serves static HTML files from /var/www/html/api/ and /var/www/html/app/
+
+Security groups allow proper communication
