@@ -1,0 +1,112 @@
+📘 Documentation: EC2 Backup & Restore using AMI
+🎯 Objective
+
+या task मध्ये आपण existing EC2 instance चा backup (AMI) तयार करू आणि त्या AMI वरून नवीन EC2 instance launch करून verify करू की data आणि applications preserve झाले आहेत.
+
+🛠️ Required AWS Services
+
+EC2 (Elastic Compute Cloud) – Instance तयार आणि चालवण्यासाठी
+
+EBS (Elastic Block Store) – Storage जिथे instance चा data save होतो
+
+AMI (Amazon Machine Image) – Backup तयार करण्यासाठी आणि restore करण्यासाठी
+
+IAM (Identity & Access Management) – योग्य permissions देण्यासाठी (EC2 full access)
+
+🔄 Step-by-Step Guide
+1. Launch Existing EC2 Instance
+
+AWS Management Console मध्ये लॉगिन करा
+
+Services → EC2 → Launch Instance निवडा
+
+खालील सेटिंग्ज निवडा:
+
+Name: MyBackupInstance
+
+AMI (OS): Ubuntu / Amazon Linux
+
+Instance Type: t2.micro (Free tier eligible)
+
+Key pair: New तयार करा किंवा existing वापरा
+
+Storage: Default (8 GB EBS)
+
+Launch Instance क्लिक करा
+
+✅ आता तुमचा instance चालू आहे.
+
+2. Connect to EC2 via SSH
+ssh -i mykey.pem ubuntu@<EC2-Public-IP>
+
+3. Install Application & Create Data
+
+उदाहरणार्थ – Nginx install करून एक custom webpage तयार करू:
+
+sudo apt update -y
+sudo apt install nginx -y
+echo "जय श्री राम" | sudo tee /var/www/html/index.html
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+
+✅ आता browser मध्ये http://<EC2-Public-IP> उघडा → तुम्हाला "जय श्री राम" दिसेल.
+
+4. Create AMI Backup of Instance
+
+AWS Console मध्ये EC2 → Instances उघडा
+
+तुमचा instance (MyBackupInstance) निवडा
+
+Actions → Image and templates → Create image क्लिक करा
+
+Details भरा:
+
+Image name: MyBackupAMI
+
+Description: Backup of Nginx server with custom page
+
+Create image क्लिक करा
+
+✅ थोड्या वेळाने AMI तयार होईल. (EC2 → AMIs section मध्ये दिसेल)
+
+5. Launch New EC2 from AMI
+
+EC2 → AMIs section मध्ये जा
+
+MyBackupAMI निवडा
+
+Launch instance from image क्लिक करा
+
+खालील सेटिंग्ज द्या:
+
+Name: RestoredInstance
+
+Instance Type: t2.micro
+
+Key pair: Same key pair वापरा
+
+Storage: Default राहू द्या
+
+Launch Instance क्लिक करा
+
+6. Verify Data & Application
+
+नवीन instance चालू झाल्यावर त्याचा Public IP घ्या
+
+Browser मध्ये उघडा:
+
+http://<New-Instance-Public-IP>
+
+
+✅ तुम्हाला "जय श्री राम" दिसेल → म्हणजे backup & restore successful झाले.
+
+🏁 Final Output
+
+जुना instance → Custom webpage चालू होता
+
+AMI backup घेतला
+
+त्या AMI वरून नवीन EC2 launch केला
+
+Data & application (Nginx + HTML page) preserved राहिले
