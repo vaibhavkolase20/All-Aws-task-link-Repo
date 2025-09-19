@@ -175,3 +175,6 @@ Reverse proxy /app → App EC2
 Backend EC2 serves static HTML files from /var/www/html/api/ and /var/www/html/app/
 
 Security groups allow proper communication
+
+
+LINK FOR THIS TASK: https://chatgpt.com/share/68cce305-a3d8-800f-8982-7251192aba4c
