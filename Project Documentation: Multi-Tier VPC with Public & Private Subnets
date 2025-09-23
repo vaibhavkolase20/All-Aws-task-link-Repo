@@ -1,0 +1,201 @@
+Project Documentation: Multi-Tier VPC with Public & Private Subnets
+Project Overview
+
+तुमचं उद्दिष्ट:
+
+Public subnet मध्ये Bastion Host + ALB ठेवणे
+
+Private subnet मध्ये App Server (NGINX चालू असलेली EC2) ठेवणे
+
+Bastion host द्वारे Private EC2 SSH access
+
+Private EC2 instances बाहेर इंटरनेट वर NAT Gateway द्वारे जाऊ शकतील
+
+User फक्त ALB द्वारे App access करू शकतील
+
+Architecture Diagram
+                    Internet
+                       |
+                       |
+                  +------------+
+                  |    ALB     |  (Public Subnet)
+                  +------------+
+                       |
+                       |
+            ---------------------------
+            |                         |
+     Private Subnet             Private Subnet
++-------------------+       +-------------------+
+|  EC2 App Server   |       |  EC2 App Server   |
+|  Nginx running    |       |  Nginx running    |
++-------------------+       +-------------------+
+            ^
+            |
+   Bastion Host (Public Subnet)
+            ^
+            |
+         Admin Laptop
+
+Step 1: VPC & Subnet Setup
+
+Create VPC
+
+CIDR: 10.0.0.0/16
+
+Create Subnets
+
+Public Subnet → CIDR: 10.0.1.0/24
+
+Private Subnet → CIDR: 10.0.2.0/24
+
+Internet Gateway & NAT Gateway
+
+Attach IGW to VPC
+
+Route table: Public subnet → IGW
+
+Private subnet → NAT Gateway
+
+Step 2: Launch EC2 Instances
+2.1 Public EC2 (Bastion Host)
+
+Subnet: Public
+
+Security Group:
+
+Inbound SSH 22 → Source = Admin IP
+
+Outbound All → 0.0.0.0/0
+
+2.2 Private EC2 (App Server)
+
+Subnet: Private
+
+Security Group:
+
+Inbound HTTP 80 → Source = ALB SG
+
+Inbound SSH 22 → Source = Bastion SG
+
+Outbound All → NAT Gateway
+
+2.3 Connect Private EC2 via Bastion
+ssh -i bastion-key.pem ubuntu@<Bastion-Public-IP>
+ssh -i private-key.pem ubuntu@<Private-EC2-Private-IP>
+
+Step 3: Install NGINX on Private EC2
+sudo apt update -y
+sudo apt install nginx -y
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+
+Create custom page:
+
+echo "Jay Shree Ram — Vaibhav: NGINX from private subnet" | sudo tee /var/www/html/index.html
+
+
+Test from Bastion:
+
+curl http://<Private-EC2-IP>
+# Output: Jay Shree Ram — Vaibhav: NGINX from private subnet
+
+Step 4: Create ALB (Application Load Balancer)
+
+EC2 Console → Load Balancers → Create → Application Load Balancer
+
+Name: my-app-alb
+
+Scheme: Internet-facing
+
+IP Type: IPv4
+
+Subnets: Public Subnet (us-east-1a, us-east-1b if available)
+
+Security Group for ALB
+
+Inbound: HTTP 80 → 0.0.0.0/0
+
+Outbound: All
+
+Listener
+
+Protocol: HTTP
+
+Port: 80
+
+Default action: Forward → Target Group (create new)
+
+Step 5: Create Target Group
+
+Target Type: Instance
+
+Protocol: HTTP
+
+Port: 80
+
+Health check: HTTP, Path: /, Port: traffic port
+
+Register Private EC2 to Target Group
+
+Target Group → Register targets → Select Private EC2 → Add → Save
+
+Step 6: Security Groups Verification
+Component	Protocol	Port	Source/Target
+Bastion → Private EC2	SSH	22	Bastion SG
+User → ALB	HTTP	80	0.0.0.0/0
+ALB → Private EC2	HTTP	80	ALB SG
+Step 7: Verify Target Group Health
+
+Target Group → Targets tab
+
+Status: Healthy
+
+Issue example:
+
+Target is in an Availability Zone that is not enabled for the load balancer
+
+
+Fix: ALB → Subnets → Enable AZ of Private EC2
+
+Step 8: Test Application
+
+Copy ALB DNS → Browser
+
+Expected Output:
+
+Jay Shree Ram — Vaibhav: NGINX from private subnet
+
+
+From Bastion:
+
+curl http://<Private-EC2-IP>
+
+Common Errors & Fixes
+Error	Reason	Fix
+503 Service Temporarily Unavailable	Target not healthy / Unused	Register instance in Target Group, verify SG, enable AZ in ALB
+Target unused, AZ not enabled	Private EC2 in AZ not assigned to ALB	ALB → Edit subnets → Add AZ
+ALB health check failing	SG blocking traffic / path wrong	Private EC2 SG → Allow ALB SG → Verify path /
+Cannot SSH Private EC2	Direct SSH blocked	Use Bastion host → SSH
+Step 9: End Result
+
+User hits ALB → reaches Private EC2 → sees NGINX page
+
+Admin can SSH Private EC2 only via Bastion
+
+Private EC2 can access internet via NAT Gateway
+
+Secure multi-tier architecture completed ✅
+
+Conclusion
+
+Multi-tier VPC, Public + Private subnets setup successfully
+
+Bastion host, ALB, Target Group, NGINX configuration done
+
+Security groups & health checks verified
+
+Common errors documented with fixes
+
+========
+this is the link for == https://chatgpt.com/share/68d243aa-1128-800f-a79d-35a0367c9629
