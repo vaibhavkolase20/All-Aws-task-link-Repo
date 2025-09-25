@@ -1,1 +1,181 @@
+📄 Git & GitHub Basics – Complete Documentation
+🟢 Project Name: git-demo
+
+Goal: Local repository तयार करणे, GitHub वर push करणे, feature branch तयार करून Pull Request करून merge करणे.
+
+1️⃣ Step 1: Local Project तयार करणे
+# New project folder तयार करा
+mkdir git-demo
+cd git-demo
+
+# एक sample file तयार करा
+echo "Hello Git & GitHub!" > readme.txt
+
+2️⃣ Step 2: Git Initialize करणे
+git init
+
+
+Explanation:
+
+.git folder तयार होतो
+
+Folder आता Git repository मध्ये बदलतो
+
+3️⃣ Step 3: Files Add & Commit करणे
+git add .
+git commit -m "Initial commit with readme.txt"
+
+
+Explanation:
+
+git add . → सर्व फाइल्स stage करतो
+
+git commit -m → बदल save करतो
+
+4️⃣ Step 4: GitHub Repository तयार करणे
+
+GitHub वर जा → New Repository
+
+Name: git-demo-repo
+
+Public/Private निवडा → Create Repository
+
+5️⃣ Step 5: Local Repo ला GitHub Link करणे
+git remote add origin https://github.com/<username>/git-demo-repo.git
+
+
+Check remote:
+
+git remote -v
+
+6️⃣ Step 6: Push to GitHub (पहिल्यांदा)
+git branch -M main
+git push origin main
+
+❌ Common Error 1: Authentication Failed
+fatal: Authentication failed
+
+
+Solution:
+
+GitHub password वापरून push करणे बंद आहे
+
+Personal Access Token (PAT) तयार कर → password ऐवजी token वापर
+
+# PAT वापरून push करा
+git push origin main
+
+❌ Common Error 2: Non-fast-forward (Remote changes आहेत)
+! [rejected] main -> main (non-fast-forward)
+
+
+Solution:
+
+git pull origin main --rebase
+git push origin main
+
+7️⃣ Step 7: Feature Branch तयार करणे
+git checkout -b feature-hello
+
+
+Explanation:
+
+नवीन branch तयार केली → feature-hello
+
+Current branch बदलली → आता feature-hello वर आहेस
+
+File add + commit in feature branch
+
+echo "This is a feature branch file" > feature.txt
+git add .
+git commit -m "Added feature.txt"
+
+8️⃣ Step 8: Push Feature Branch to GitHub
+git push origin feature-hello
+
+❌ Common Error 3: Authentication Failed
+
+Use PAT instead of password
+
+9️⃣ Step 9: Pull Request (PR) तयार करणे
+
+GitHub Repo वर जा
+
+feature-hello branch दिसेल → Compare & Pull Request क्लिक करा
+
+Base branch = main
+
+Compare branch = feature-hello
+
+Description लिहून → Create Pull Request
+
+Merge Pull Request → Confirm Merge
+
+Note:
+
+Local machine वर अजूनही feature branch वर आहे
+
+Merge झालेले changes local main branch मध्ये आणण्यासाठी:
+
+git checkout main
+git pull origin main
+
+🔹 Step 10: Branches तपासणे
+# Local branches
+git branch
+
+# Remote branches
+git branch -r
+
+# Local + Remote branches
+git branch -a
+
+# Current branch
+git status
+
+🔹 Step 11: Status तपासणे
+git status
+
+
+Output examples:
+
+Your branch is up to date with 'origin/main'. → synced
+
+Your branch is ahead of 'origin/main' by 1 commit. → push कर
+
+Your branch is behind 'origin/main' by 2 commits. → pull कर
+
+🔹 Step 12: Commit History तपासणे
+git log --oneline --graph --decorate --all
+
+
+Branch structure आणि merge history पाहता येईल
+
+🔹 Step 13: Best Practices
+
+Main branch stable ठेव
+
+Feature branch मध्ये बदल कर → Merge via PR
+
+Regular pull + push करा → conflict टाळण्यासाठी
+
+Personal Access Token वापर → GitHub authentication
+
+✅ Summary Flow
+Local Repo
+   |
+   | git checkout -b feature-hello
+   v
+Feature Branch → Add + Commit
+   |
+   | git push origin feature-hello
+   v
+GitHub → Pull Request → Merge into Main
+   |
+   | git checkout main
+   | git pull origin main
+   v
+Local Main branch synced
+
+
 this is the link for this task == https://chatgpt.com/share/68d4d251-7f58-800f-811b-85cc60c1f1f2
